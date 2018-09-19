@@ -26,13 +26,31 @@ LONG WINAPI ExHandler(PEXCEPTION_POINTERS exPtr) {
     }
 
     for (int i=0; i<NOF_BREAKPOINTS; i++) {
-     if (exPtr->ContextRecord->Eip == (int) func_addrs[i]) {
-        char buf[123];
-        wsprintf(buf, "Breakpoint %d was hit\n", i);
-        out(buf);
-       *func_addrs[i] = old_instr[i];
-        SetThreadContext(GetCurrentThread(), exPtr->ContextRecord);
-     }
+     //
+     // Trying to determine the function that caused the breakpoint
+     // exception.
+
+        if (exPtr->ContextRecord->Eip == (int) func_addrs[i]) {
+         //
+         // The EIP register is equal to the address of one of our
+         // functions. Reporting it to the console:
+         //
+            char buf[123];
+            wsprintf(buf, "Breakpoint %d was hit\n", i);
+            out(buf);
+
+         //
+         // In order to proceed with the execution of the program, we
+         // restore the old value of the byte that was replaced by
+         // the int-3 instruction:
+         //
+           *func_addrs[i] = old_instr[i];
+
+         //
+         // Resume execution:
+         //
+            SetThreadContext(GetCurrentThread(), exPtr->ContextRecord);
+        }
     }
 
 
@@ -59,11 +77,26 @@ int main() {
   func_addrs[1] = (char*) func_1;
 
   for (int i=0; i<NOF_BREAKPOINTS; i++) {
+  //
+  // Setting the breakpoints at the functions addresses.
+  //
+  // First, we need to make the code segment writable to be able to
+  // insert the breakpoint instruction. Otherwise, the modification of
+  // the (read-only) code segment would cause an exception.
+  //
 
      DWORD oldProtection;
-     VirtualProtect(func_addrs[0], 0x4000, PAGE_EXECUTE_READWRITE, &oldProtection);
+     VirtualProtect(func_addrs[0], 1, PAGE_EXECUTE_READWRITE, &oldProtection);
 
+  //
+  // We also want to store the value of the byte before we set the int-3
+  // instruction:
+  //
      old_instr[i]  = *func_addrs[i];
+
+  //
+  // Finally, we can inject the int-3 instruction (0xcc):
+  //
     *func_addrs[i] = 0xcc;
 
   }
@@ -75,4 +108,3 @@ int main() {
 
   out(buf);
 }
-
