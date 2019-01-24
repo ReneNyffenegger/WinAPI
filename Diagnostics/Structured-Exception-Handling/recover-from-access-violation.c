@@ -1,3 +1,8 @@
+//
+//  Compiling:
+//     cl recover-from-access-violation.c user32.lib
+//
+
 #include <windows.h>
 
 HANDLE stdOut;
@@ -8,9 +13,9 @@ void out(char const* text) {
 }
 
 LONG WINAPI ExceptionHandler(PEXCEPTION_POINTERS exPtr) {
-    out("Exception handler\r\n");
-
     char buf[123];
+
+    out("Exception handler\r\n");
 
     if (exPtr->ExceptionRecord->ExceptionCode != EXCEPTION_ACCESS_VIOLATION) {
       out("Expected EXCEPTION_ACCESS_VIOLATION!\n");
@@ -41,11 +46,12 @@ LONG WINAPI ExceptionHandler(PEXCEPTION_POINTERS exPtr) {
 
 
 int main() {
+  int *ptr;
+
   stdOut = GetStdHandle(STD_OUTPUT_HANDLE);
 
   AddVectoredExceptionHandler(1, ExceptionHandler  );
 
-  int *ptr;
   ptr = (int*) 0;
 
   out("Going to cause access violation\n");
