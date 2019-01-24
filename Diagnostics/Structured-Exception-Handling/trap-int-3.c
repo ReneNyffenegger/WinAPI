@@ -1,3 +1,7 @@
+//
+//  Compiling
+//    cl trap-int-3.c user32.lib
+//
 #include <windows.h>
 
 //
@@ -10,7 +14,7 @@ HANDLE stdOut;
 
 char  byte_orig;
 char *func_addrs[NOF_BREAKPOINTS];
-char  old_instr[NOF_BREAKPOINTS];
+char  old_instr [NOF_BREAKPOINTS];
 int   nrLastFuncBreakpointHit;
 
 void out(char const* text) {
@@ -20,12 +24,13 @@ void out(char const* text) {
 
 
 LONG WINAPI ExHandler(PEXCEPTION_POINTERS exPtr) {
+    int i;
 
     if (exPtr->ExceptionRecord->ExceptionCode == EXCEPTION_BREAKPOINT) {
 //    out("Expected EXCEPTION_BREAKPOINT!\n");
 //    return EXCEPTION_CONTINUE_SEARCH;
 
-      for (int i=0; i<NOF_BREAKPOINTS; i++) {
+      for (i=0; i<NOF_BREAKPOINTS; i++) {
        //
        // Trying to determine the function that caused the breakpoint
        // exception.
@@ -95,8 +100,6 @@ LONG WINAPI ExHandler(PEXCEPTION_POINTERS exPtr) {
        out("Either EXCEPTION_CONTINUE_SEARCH or EXCEPTION_SINGLE_STEP was expected.\n");
     }
 
-
-
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
@@ -130,16 +133,19 @@ int func_3(int i) {
 
 
 int main() {
+  int  i, res;
+  char buf[123];
+
   stdOut = GetStdHandle(STD_OUTPUT_HANDLE);
 
-  AddVectoredExceptionHandler(1, ExHandler  );
+  AddVectoredExceptionHandler(1, ExHandler);
 
   func_addrs[0] = (char*) func_0;
   func_addrs[1] = (char*) func_1;
   func_addrs[2] = (char*) func_2;
   func_addrs[3] = (char*) func_3;
 
-  for (int i=0; i<NOF_BREAKPOINTS; i++) {
+  for (i=0; i<NOF_BREAKPOINTS; i++) {
   //
   // Setting the breakpoints at the functions addresses.
   //
@@ -164,9 +170,8 @@ int main() {
 
   }
 
-  int res = func_0(0);
+  res = func_0(0);
 
-  char buf[123];
   wsprintf(buf, "res = %d\n", res);
 
   out(buf);
