@@ -25,10 +25,12 @@ void out(char const* text) {
 
 LONG WINAPI ExHandler(PEXCEPTION_POINTERS exPtr) {
     int i;
+    char buf[123];
 
     if (exPtr->ExceptionRecord->ExceptionCode == EXCEPTION_BREAKPOINT) {
-//    out("Expected EXCEPTION_BREAKPOINT!\n");
-//    return EXCEPTION_CONTINUE_SEARCH;
+
+//    wsprintf(buf, "breakpoint at address %d\n", exPtr->ContextRecord->Eip);
+//    out(buf);
 
       for (i=0; i<NOF_BREAKPOINTS; i++) {
        //
@@ -40,7 +42,6 @@ LONG WINAPI ExHandler(PEXCEPTION_POINTERS exPtr) {
            // The EIP register is equal to the address of one of our
            // functions. Reporting it to the console:
            //
-              char buf[123];
               wsprintf(buf, "Breakpoint %d was hit\n", i);
               out(buf);
 
@@ -63,22 +64,24 @@ LONG WINAPI ExHandler(PEXCEPTION_POINTERS exPtr) {
            // instruction. This allows to set the break point
            // again after the single step instruction.
            //
-  
               exPtr->ContextRecord->EFlags |= 0x100;
   
            //
            // Resume execution:
            //
               SetThreadContext(GetCurrentThread(), exPtr->ContextRecord);
+
           }
        }
     }
     else if (exPtr->ExceptionRecord->ExceptionCode == EXCEPTION_SINGLE_STEP) {
+//    wsprintf(buf, "Single step at address %d\n", exPtr->ContextRecord->Eip);
+//    out(buf);
 
     //
     // The processor is one instruction behind the last breakpoint that was
     // hit. We can now set the breakpoint again.
-
+    //
       *func_addrs[nrLastFuncBreakpointHit] = 0xcc;
 
     //
@@ -87,8 +90,6 @@ LONG WINAPI ExHandler(PEXCEPTION_POINTERS exPtr) {
     //
     // Thus, we can resume execution again:
     //
-
-
        SetThreadContext(GetCurrentThread(), exPtr->ContextRecord);
 
     }
