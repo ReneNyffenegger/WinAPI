@@ -88,10 +88,14 @@ LONG WINAPI ExHandler(PEXCEPTION_POINTERS exPtr) {
     // Apparently, the TF flag is reset after the single execution, it
     // needs not be reset.
     //
-    // Thus, we can resume execution again:
+    // Thus, we can resume execution again.
     //
-       SetThreadContext(GetCurrentThread(), exPtr->ContextRecord);
-
+    // This can apparently be done by SetThreadContext(…) or returning
+    // EXCEPTION_CONTINUE_EXECUTION. I am not sure which one is
+    // correct.
+    //
+//     SetThreadContext(GetCurrentThread(), exPtr->ContextRecord);
+       return EXCEPTION_CONTINUE_EXECUTION;
     }
     else {
 
